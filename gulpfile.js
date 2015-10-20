@@ -8,9 +8,6 @@ var autoprefixer = require('gulp-autoprefixer');
 var jshint = require('gulp-jshint');
 var concat = require('gulp-concat');
 var templateCache = require('gulp-angular-templatecache');
-var RevAll = require('gulp-rev-all');
-var awspublish = require('gulp-awspublish');
-var cloudfront = require('gulp-cloudfront');
 var connect = require('gulp-connect');
 var uglify = require('gulp-uglify');
 var sourcemaps = require('gulp-sourcemaps');
@@ -30,9 +27,8 @@ gulp.task('server', function () {
 
 gulp.task('scripts', function () {
   gulp.src([
-    '!./app/js/printPDFjs/xepOnline.jqPlugin.js',
-    './app/module.js',
-    './app/**/module.js',
+    './app/app.module.js',
+    './app/**/*.module.js',
     './app/*.js',
     './app/**/*.js'
   ])
@@ -42,7 +38,7 @@ gulp.task('scripts', function () {
     .pipe(sourcemaps.init())
     .pipe(concat('app.js'))
     .pipe(ngAnnotate())
-    .pipe(gulpif(process.env.BUILD === 'true', uglify()))
+    .pipe(gulpif(process.env.DEPLOY, uglify()))
     .pipe(sourcemaps.write())
     .pipe(gulp.dest('./build/js'));
 });
@@ -76,30 +72,24 @@ gulp.task('templates', function () {
     .pipe(gulp.dest('./build/js'));
 });
 
-gulp.task('copy-img', function () {
-  gulp.src('./app/img/*.*')
-    .pipe(gulp.dest('./build/img'));
-});
-
 gulp.task('favicon', function () {
   gulp.src('./app/*')
     .pipe(gulp.dest('./build'));
 });
 
 gulp.task('dev-config', function () {
-  process.env.BUILD = 'false';
+  process.env.DEPLOY = false;
   gulp.src('./config.json')
     .pipe(ngConstant({
       name: 'benchmark.env',
       constants: {
         URLS: {
-          BENCHMARK_API_URL: process.env.DEV_BENCHMARK_API_URL,
-          BENCHMARK_PUBLIC_URL: process.env.BENCHMARK_PUBLIC_URL,
-          BENCHMARK_SURVEY_URL: process.env.DEV_BENCHMARK_SURVEY_URL
+          // example:
+          // API_URL: process.env.API_URL
         },
         ENV: {
-          BENCHMARK_CLIENT_ID: process.env.BENCHMARK_CLIENT_ID,
-          BENCHMARK_CLIENT_SECRET: process.env.BENCHMARK_CLIENT_SECRET
+          // example:
+          // API_TOKEN: process.env.API_TOKEN
         }
       }
     }))
@@ -108,19 +98,18 @@ gulp.task('dev-config', function () {
 });
 
 gulp.task('config', function () {
-  process.env.BUILD = 'true';
+  process.env.DEPLOY = true;
   gulp.src('./config.json')
     .pipe(ngConstant({
       name: 'benchmark.env',
       constants: {
         URLS: {
-          BENCHMARK_API_URL: process.env.BENCHMARK_API_URL,
-          BENCHMARK_PUBLIC_URL: process.env.BENCHMARK_PUBLIC_URL,
-          BENCHMARK_SURVEY_URL: process.env.BENCHMARK_SURVEY_URL
+          // example:
+          // API_URL: process.env.API_URL
         },
         ENV: {
-          BENCHMARK_CLIENT_ID: process.env.BENCHMARK_CLIENT_ID,
-          BENCHMARK_CLIENT_SECRET: process.env.BENCHMARK_CLIENT_SECRET
+          // example:
+          // API_TOKEN: process.env.API_TOKEN
         }
       }
     }))
@@ -130,29 +119,7 @@ gulp.task('config', function () {
 
 gulp.task('dep-js', function () {
   gulp.src([
-    './bower_components/angular/angular.min.js',
-    './bower_components/angular-ui-router/release/angular-ui-router.min.js',
-    './bower_components/angular-cookie/angular-cookie.min.js',
-    './bower_components/angular-animate/angular-animate.min.js',
-    './bower_components/ngstorage/ngStorage.min.js',
-    './bower_components/angulartics/dist/angulartics.min.js',
-    './bower_components/angulartics/dist/angulartics-segmentio.min.js',
-    './bower_components/angular-sanitize/angular-sanitize.min.js',
-    './bower_components/angular-strap/dist/angular-strap.min.js',
-    './bower_components/angular-strap/dist/angular-strap.tpl.min.js',
-    './bower_components/d3/d3.min.js',
-    './bower_components/c3/c3.min.js',
-    './bower_components/lodash/lodash.min.js',
-    './bower_components/angular-google-maps/dist/angular-google-maps.min.js',
-    './bower_components/angular-ui-select/dist/select.min.js',
-    './bower_components/angular-moment/angular-moment.min.js',
-    './bower_components/moment/min/moment.min.js',
-    './bower_components/lrInfiniteScroll/lrInfiniteScroll.js',
-    './bower_components/twitter-text/twitter-text.js',
-    './bower_components/angular-bootstrap/ui-bootstrap.min.js',
-    './bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js',
-    './bower_components/angular-ui-tree/dist/angular-ui-tree.min.js',
-    './bower_components/lodash-deep/lodash-deep.min.js'
+    './bower_components/angular/angular.min.js'
   ])
     .pipe(concat('deps.js'))
     .pipe(gulp.dest('./build/js'));
@@ -160,23 +127,18 @@ gulp.task('dep-js', function () {
 
 gulp.task('dep-css', function() {
   gulp.src([
-    './bower_components/angular-ui-select/dist/select.css',
-    './bower_components/c3/c3.css'
+    // example:
+    // './bower_components/module/file.css'
   ])
     .pipe(concat('deps.css'))
     .pipe(gulp.dest('./build/css/'));
-});
-
-gulp.task('fonts', function () {
-  gulp.src(['./app/fonts/*/*'])
-    .pipe(gulp.dest('./build/fonts'));
 });
 
 gulp.task('watch', function () {
   gulp.watch([
     'build/**/*.html',
     'build/**/*.js',
-    'build/**/*.css',
+    'build/**/*.css'
   ], function (event) {
     return gulp
       .src(event.path)
@@ -190,29 +152,7 @@ gulp.task('watch', function () {
   gulp.watch('./app/index.html', ['copy-index']);
 });
 
-gulp.task('revision', function() {
-  var revAll = new RevAll({ dontSearchFile: [ 'deps.js' ]});
-  var aws = {
-    "key": process.env.AWS_ACCESS_KEY_ID,
-    "secret": process.env.AWS_SECRET_KEY,
-    "bucket": process.env.AWS_BUCKET,
-    "region": "us-west-1",
-    "distributionId": process.env.AWS_CLOUDFRONT_ID,
-    "patternIndex": /^\/index\.[a-f0-9]{8}\.html(\.gz)*$/gi
-  };
-  var publisher = awspublish.create(aws);
-  var headers = {'Cache-Control': 'max-age=315360000, no-transform, public'};
-
-  gulp.src('build/**')
-    .pipe(revAll.revision())
-    .pipe(awspublish.gzip())
-    .pipe(publisher.publish(headers))
-    .pipe(publisher.cache())
-    .pipe(awspublish.reporter())
-    .pipe(cloudfront(aws));
-});
-
-gulp.task('default', ['env', 'dev-config', 'scripts', 'templates', 'less', 'copy-index', 'copy-img', 'favicon', 'dep-js', 'dep-css', 'fonts']);
-gulp.task('dev', ['env', 'dev-config', 'scripts', 'templates', 'less', 'copy-index', 'copy-img', 'favicon', 'dep-js', 'dep-css', 'fonts', 'server', 'watch']);
+gulp.task('default', ['env', 'dev-config', 'scripts', 'templates', 'less', 'copy-index', 'copy-img', 'favicon', 'dep-js', 'dep-css']);
+gulp.task('dev', ['env', 'dev-config', 'scripts', 'templates', 'less', 'copy-index', 'copy-img', 'favicon', 'dep-js', 'dep-css', 'server', 'watch']);
 gulp.task('build', ['env', 'config', 'scripts', 'templates', 'less', 'copy-index', 'copy-img', 'favicon', 'dep-js', 'dep-css', 'fonts']);
-gulp.task('deploy', ['build', 'revision']);
+gulp.task('deploy', ['build']);
