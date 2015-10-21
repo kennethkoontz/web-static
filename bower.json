@@ -1,0 +1,21 @@
+{
+  "name": "web-static",
+  "description": "",
+  "main": "app.js",
+  "authors": [
+    "ken koontz <kenneth.koontz@gmail.com>"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/kennethkoontz/web-static",
+  "moduleType": [],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "~1.4.7"
+  }
+}
