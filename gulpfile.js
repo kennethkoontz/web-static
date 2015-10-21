@@ -152,7 +152,7 @@ gulp.task('watch', function () {
   gulp.watch('./app/index.html', ['copy-index']);
 });
 
-gulp.task('default', ['env', 'dev-config', 'scripts', 'templates', 'less', 'copy-index', 'copy-img', 'favicon', 'dep-js', 'dep-css']);
-gulp.task('dev', ['env', 'dev-config', 'scripts', 'templates', 'less', 'copy-index', 'copy-img', 'favicon', 'dep-js', 'dep-css', 'server', 'watch']);
-gulp.task('build', ['env', 'config', 'scripts', 'templates', 'less', 'copy-index', 'copy-img', 'favicon', 'dep-js', 'dep-css', 'fonts']);
+gulp.task('default', ['env', 'dev-config', 'scripts', 'templates', 'less', 'copy-index', 'favicon', 'dep-js', 'dep-css']);
+gulp.task('dev', ['env', 'dev-config', 'scripts', 'templates', 'less', 'copy-index', 'favicon', 'dep-js', 'dep-css', 'server', 'watch']);
+gulp.task('build', ['env', 'config', 'scripts', 'templates', 'less', 'copy-index', 'favicon', 'dep-js', 'dep-css', 'fonts']);
 gulp.task('deploy', ['build']);
